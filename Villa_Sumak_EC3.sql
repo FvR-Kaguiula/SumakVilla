@@ -1,11 +1,3 @@
--- ==========================================================
--- Villa Sumak - MySQL 8.0+ / MySQL Workbench
--- Conversión desde SQL Server.
--- NOTA: No elimina la base de datos existente ni sus datos.
--- Para reconstruir desde cero, respalda tus datos antes de ejecutar
--- manualmente: DROP DATABASE SumakVillaDB;
--- ==========================================================
-
 CREATE DATABASE IF NOT EXISTS SumakVillaDB01;
 USE SumakVillaDB01;
 
