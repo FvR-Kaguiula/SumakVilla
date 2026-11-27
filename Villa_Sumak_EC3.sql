@@ -1,62 +1,68 @@
-CREATE DATABASE IF NOT EXISTS SumakVillaDB01;
-USE SumakVillaDB01;
+-- ============================================================================
+-- Sumak Villa - Script (MySQL 8.0+ / MySQL Workbench)
+-- Contiene: 24 tablas base + carga de datos + consultas + particionamiento + trigger
+-- ============================================================================
+
+DROP DATABASE IF EXISTS SumakVillaDB;
+CREATE DATABASE IF NOT EXISTS SumakVillaDB;
+USE SumakVillaDB;
 
 -- ==========================================================
 -- BLOQUE 1: TABLAS MAESTRAS INDEPENDIENTES (CONFIGURACIÓN)
 -- ==========================================================
 
 CREATE TABLE Distrito (
-    Id_distrito INT PRIMARY KEY,
+    Id_dist INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(30) NOT NULL
 );
 
 CREATE TABLE Tipo_pago (
-Id_tipo_pago INT PRIMARY KEY,
-Nombre VARCHAR(30) NOT NULL UNIQUE
+    Id_tipo_pag INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(30) NOT NULL UNIQUE
 );
 
-CREATE TABLE Estado_pedido (
-    Id_estado INT PRIMARY KEY,
+CREATE TABLE Estado_ped (
+    Id_estado INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(30) NOT NULL UNIQUE,
     Descripcion VARCHAR(250)
 );
 
-CREATE TABLE Estado_despacho (
-    Id_estado_despacho INT PRIMARY KEY,
+CREATE TABLE Estado_dep (
+    Id_est_desp INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(30) NOT NULL UNIQUE,
     Descripcion VARCHAR(250)
 );
 
-CREATE TABLE Estado_comprobante (
-    Id_estado_comprobante INT PRIMARY KEY,
+CREATE TABLE Estado_comprob (
+    Id_est_comp INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(30) NOT NULL UNIQUE,
     Descripcion VARCHAR(250)
 );
 
-CREATE TABLE Estado_orden_compra (
-    Id_estado_oc INT PRIMARY KEY,
+CREATE TABLE Est_ord_comp (
+    Id_est_oc INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(30) NOT NULL UNIQUE,
     Descripcion VARCHAR(250)
 );
 
 CREATE TABLE Categoria (
-    Id_categoria INT PRIMARY KEY,
+    Id_cat INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(50) NOT NULL UNIQUE,
     Descripcion VARCHAR(250)
 );
 
 CREATE TABLE Almacen (
-    Id_almacen INT PRIMARY KEY,
+    Id_almacen INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(30) NOT NULL UNIQUE,
     Responsable VARCHAR(30) NOT NULL
 );
 
-CREATE TABLE Tecnica_perzonalizacion (
-    Id_tecnica INT PRIMARY KEY,
+CREATE TABLE Tecnica_perz (
+    Id_tecnica INT AUTO_INCREMENT PRIMARY KEY,
     Nombre VARCHAR(50) NOT NULL UNIQUE,
-    Costo_adicional DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    Costo_ad DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     Descripcion VARCHAR(250),
-    CONSTRAINT chk_costo_tecnica CHECK (Costo_adicional >= 0.00) -- Restricción Mayor o Igual a 0
+    CONSTRAINT chk_costo_tecnica CHECK (Costo_ad >= 0.00) -- Mayor o igual a 0
 );
 
 -- ==========================================================
@@ -64,14 +70,14 @@ CREATE TABLE Tecnica_perzonalizacion (
 -- ==========================================================
 
 CREATE TABLE CLIENTE (
-    id_cliente INT PRIMARY KEY,
-    razon_cliente VARCHAR(50) NOT NULL,
-    fecha_registro DATE NOT NULL,
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    razon_cli VARCHAR(50) NOT NULL,
+    fecha_reg DATE NOT NULL,
     Direccion VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE contacto_cliente (
-    Id_contacto_cliente INT PRIMARY KEY,
+CREATE TABLE contacto_cli (
+    Id_cont_cli INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT NOT NULL,
     Nombre VARCHAR(30) NOT NULL,
     Apellido VARCHAR(30) NOT NULL,
@@ -81,22 +87,23 @@ CREATE TABLE contacto_cliente (
 );
 
 CREATE TABLE Proveedor (
-    Id_proveedor INT PRIMARY KEY,
+    Id_prov INT AUTO_INCREMENT PRIMARY KEY,
     Razon VARCHAR(50) NOT NULL,
     Ruc VARCHAR(11) NOT NULL UNIQUE,
     Direccion VARCHAR(100) NOT NULL,
     Telefono VARCHAR(9) NOT NULL,
+    Telef VARCHAR(9),
     Correo VARCHAR(100) NOT NULL UNIQUE
 );
 
-CREATE TABLE Contacto_proveedor (
-    Id_contacto_proveedor INT PRIMARY KEY,
-    Id_proveedor INT NOT NULL,
+CREATE TABLE Contacto_prov (
+    Id_cont_prov INT AUTO_INCREMENT PRIMARY KEY,
+    Id_prov INT NOT NULL,
     Nombre VARCHAR(30) NOT NULL,
     Apellido VARCHAR(30) NOT NULL,
     Telefono VARCHAR(9) NOT NULL,
     Correo VARCHAR(100) NOT NULL UNIQUE,
-    FOREIGN KEY (Id_proveedor) REFERENCES Proveedor(Id_proveedor)
+    FOREIGN KEY (Id_prov) REFERENCES Proveedor(Id_prov)
 );
 
 -- ==========================================================
@@ -104,52 +111,49 @@ CREATE TABLE Contacto_proveedor (
 -- ==========================================================
 
 CREATE TABLE Producto (
-    Id_producto INT PRIMARY KEY,
-    Id_categoria INT NOT NULL,
+    Id_prod INT AUTO_INCREMENT PRIMARY KEY,
+    Id_cat INT NOT NULL,
     Id_tecnica INT NOT NULL,
     Nombre VARCHAR(50) NOT NULL,
-    Precio_unitario DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    Precio_uni DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     Estado VARCHAR(30) NOT NULL DEFAULT 'ACTIVO',
-    FOREIGN KEY (Id_categoria) REFERENCES Categoria(Id_categoria),
-    FOREIGN KEY (Id_tecnica) REFERENCES Tecnica_perzonalizacion(Id_tecnica),
-    CONSTRAINT chk_precio_producto CHECK (Precio_unitario > 0.00), -- Restricción Mayor a 0
+    FOREIGN KEY (Id_cat) REFERENCES Categoria(Id_cat),
+    FOREIGN KEY (Id_tecnica) REFERENCES Tecnica_perz(Id_tecnica),
+    CONSTRAINT chk_precio_producto CHECK (Precio_uni > 0.00), -- Mayor a 0
     CONSTRAINT chk_estado_producto CHECK (Estado IN ('ACTIVO', 'INACTIVO'))
 );
 
 CREATE TABLE Inventario (
-    Id_inventario INT PRIMARY KEY,
-    Id_producto INT NOT NULL,
+    Id_invent INT AUTO_INCREMENT PRIMARY KEY,
+    Id_prod INT NOT NULL,
     stock_actual INT NOT NULL DEFAULT 0,
-    stock_minimo INT NOT NULL DEFAULT 0,
+    stock_min INT NOT NULL DEFAULT 0,
     Ubicacion VARCHAR(30) NOT NULL,
-    FOREIGN KEY (Id_producto) REFERENCES Producto(Id_producto),
+    FOREIGN KEY (Id_prod) REFERENCES Producto(Id_prod),
     CONSTRAINT chk_stock_actual CHECK (stock_actual >= 0),
-    CONSTRAINT chk_stock_min CHECK (stock_minimo >= 0)
+    CONSTRAINT chk_stock_min CHECK (stock_min >= 0)
 );
 
-
-CREATE TABLE Stock_almacen (
-    Id_stock INT PRIMARY KEY,
+CREATE TABLE Stock_alm (
+    Id_stock INT AUTO_INCREMENT PRIMARY KEY,
     Id_almacen INT NOT NULL,
-    Id_producto INT NOT NULL,
-    Cantidad_disponible INT NOT NULL DEFAULT 0,
+    Id_prod INT NOT NULL,
+    Cant_disp INT NOT NULL DEFAULT 0,
     FOREIGN KEY (Id_almacen) REFERENCES Almacen(Id_almacen),
-    FOREIGN KEY (Id_producto) REFERENCES Producto(Id_producto),
-    CONSTRAINT chk_cant_disponible CHECK (Cantidad_disponible >= 0)
+    FOREIGN KEY (Id_prod) REFERENCES Producto(Id_prod),
+    CONSTRAINT chk_cant_disponible CHECK (Cant_disp >= 0)
 );
 
-CREATE TABLE Movimiento_inventario (
-    Id_movimiento INT PRIMARY KEY,
-    Id_producto INT NOT NULL,
-    Id_almacen INT NOT NULL,
-    Tipo_movimiento VARCHAR(30) NOT NULL,
+CREATE TABLE Mov_invent (
+    Id_mov INT AUTO_INCREMENT PRIMARY KEY,
+    Id_prod INT NOT NULL,
+    Tipo_mov VARCHAR(30) NOT NULL,
     Cantidad INT NOT NULL,
     Fecha DATE NOT NULL,
     Observacion VARCHAR(250),
-    FOREIGN KEY (Id_producto) REFERENCES Producto(Id_producto),
-    FOREIGN KEY (Id_almacen) REFERENCES Almacen(Id_almacen),
-    CONSTRAINT chk_cantidad_mov CHECK (Cantidad > 0), -- Debe moverse al menos 1 artículo
-    CONSTRAINT chk_tipo_movimiento CHECK (Tipo_movimiento IN ('INGRESO', 'SALIDA', 'AJUSTE'))
+    FOREIGN KEY (Id_prod) REFERENCES Producto(Id_prod),
+    CONSTRAINT chk_cantidad_mov CHECK (Cantidad > 0), -- Al menos 1 artículo
+    CONSTRAINT chk_tipo_movimiento CHECK (Tipo_mov IN ('INGRESO', 'SALIDA', 'AJUSTE'))
 );
 
 -- ==========================================================
@@ -157,69 +161,69 @@ CREATE TABLE Movimiento_inventario (
 -- ==========================================================
 
 CREATE TABLE Pedido (
-    Id_pedido INT PRIMARY KEY,
+    Id_ped INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT NOT NULL,
     Id_estado INT NOT NULL,
-    Fecha_pedido DATE NOT NULL,
-    Fecha_entrega DATE,
+    Fecha_ped DATE NOT NULL,
+    Fecha_ent DATE,
     Estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE',
-    Observacion VARCHAR(250),
+    Obs VARCHAR(250),
     FOREIGN KEY (id_cliente) REFERENCES CLIENTE(id_cliente),
-    FOREIGN KEY (Id_estado) REFERENCES Estado_pedido(Id_estado),
+    FOREIGN KEY (Id_estado) REFERENCES Estado_ped(Id_estado),
     CONSTRAINT chk_estado_pedido CHECK (Estado IN ('PENDIENTE', 'ADMITIDO', 'PROCESADO', 'ENTREGADO', 'CANCELADO'))
 );
 
-CREATE TABLE Detalle_pedido (
-    Id_detalle INT PRIMARY KEY,
-    Id_pedido INT NOT NULL,
-    Id_producto INT NOT NULL,
+CREATE TABLE Det_pedido (
+    Id_det INT AUTO_INCREMENT PRIMARY KEY,
+    Id_ped INT NOT NULL,
+    Id_prod INT NOT NULL,
     Cantidad INT NOT NULL,
     Subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    FOREIGN KEY (Id_pedido) REFERENCES Pedido(Id_pedido),
-    FOREIGN KEY (Id_producto) REFERENCES Producto(Id_producto),
+    FOREIGN KEY (Id_ped) REFERENCES Pedido(Id_ped),
+    FOREIGN KEY (Id_prod) REFERENCES Producto(Id_prod),
     CONSTRAINT chk_cantidad_pedido CHECK (Cantidad > 0),
     CONSTRAINT chk_subtotal_pedido CHECK (Subtotal >= 0.00)
 );
 
 CREATE TABLE Despacho (
-    Id_despacho INT PRIMARY KEY,
-    Id_pedido INT NOT NULL,
-    Id_distrito INT NOT NULL,
-    Id_estado_despacho INT NOT NULL,
-    Fecha_despacho DATE NOT NULL,
-    Direccion_entrega VARCHAR(100) NOT NULL,
-    Responsable_entrega VARCHAR(30) NOT NULL,
+    Id_desp INT AUTO_INCREMENT PRIMARY KEY,
+    Id_ped INT NOT NULL,
+    Id_dist INT NOT NULL,
+    Id_est_desp INT NOT NULL,
+    Fecha_desp DATE NOT NULL,
+    Direc_entrega VARCHAR(100) NOT NULL,
+    Resp_entrega VARCHAR(30) NOT NULL,
     Estado_despacho VARCHAR(30) NOT NULL DEFAULT 'EN ALMACEN',
-    FOREIGN KEY (Id_pedido) REFERENCES Pedido(Id_pedido),
-    FOREIGN KEY (Id_distrito) REFERENCES Distrito(Id_distrito),
-    FOREIGN KEY (Id_estado_despacho) REFERENCES Estado_despacho(Id_estado_despacho),
+    FOREIGN KEY (Id_ped) REFERENCES Pedido(Id_ped),
+    FOREIGN KEY (Id_dist) REFERENCES Distrito(Id_dist),
+    FOREIGN KEY (Id_est_desp) REFERENCES Estado_dep(Id_est_desp),
     CONSTRAINT chk_estado_despacho CHECK (Estado_despacho IN ('EN ALMACEN', 'EN RUTA', 'ENTREGADO', 'RECHAZADO'))
 );
 
 CREATE TABLE Comprobante (
-    Id_comprobante INT PRIMARY KEY,
-    Id_pedido INT NOT NULL,
-    Id_estado_comprobante INT NOT NULL,
-    Tipo_comprobante VARCHAR(30) NOT NULL DEFAULT 'BOLETA',
+    Id_comprob INT AUTO_INCREMENT PRIMARY KEY,
+    Id_ped INT NOT NULL,
+    Id_est_comp INT NOT NULL,
+    Tipo_comprob VARCHAR(30) NOT NULL DEFAULT 'BOLETA',
     Igv DECIMAL(10,2) NOT NULL DEFAULT 0.18,
-    Fecha_emision DATE NOT NULL,
+    Fecha_emi DATE NOT NULL,
     Monto_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    Estado_comprobante VARCHAR(30) NOT NULL DEFAULT 'EMITIDO',
-    FOREIGN KEY (Id_pedido) REFERENCES Pedido(Id_pedido),
-    FOREIGN KEY (Id_estado_comprobante) REFERENCES Estado_comprobante(Id_estado_comprobante),
-    CONSTRAINT chk_monto_comprobante CHECK (Monto_total >= 0.00),
-    CONSTRAINT chk_tipo_comprobante CHECK (Tipo_comprobante IN ('BOLETA', 'FACTURA')),
-    CONSTRAINT chk_estado_comprobante CHECK (Estado_comprobante IN ('EMITIDO', 'PAGADO', 'ANULADO'))
+    Estado_comprob VARCHAR(30) NOT NULL DEFAULT 'EMITIDO',
+    FOREIGN KEY (Id_ped) REFERENCES Pedido(Id_ped),
+    FOREIGN KEY (Id_est_comp) REFERENCES Estado_comprob(Id_est_comp),
+    CONSTRAINT chk_monto_comprob CHECK (Monto_total >= 0.00),
+    CONSTRAINT chk_tipo_comprob CHECK (Tipo_comprob IN ('BOLETA', 'FACTURA')),
+    CONSTRAINT chk_estado_comprob CHECK (Estado_comprob IN ('EMITIDO', 'PAGADO', 'ANULADO'))
 );
 
 CREATE TABLE Pago (
-    Id_pago INT PRIMARY KEY,
-    Id_comprobante INT NOT NULL,
-    Id_tipo_pago INT NOT NULL,
+    Id_pago INT AUTO_INCREMENT PRIMARY KEY,
+    Id_comprob INT NOT NULL,
+    Id_tipo_pag INT NOT NULL,
     Fecha_pago DATE NOT NULL,
     Monto DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (Id_comprobante) REFERENCES Comprobante(Id_comprobante),
-    FOREIGN KEY (Id_tipo_pago) REFERENCES Tipo_pago(Id_tipo_pago),
+    FOREIGN KEY (Id_comprob) REFERENCES Comprobante(Id_comprob),
+    FOREIGN KEY (Id_tipo_pag) REFERENCES Tipo_pago(Id_tipo_pag),
     CONSTRAINT chk_monto_pago CHECK (Monto > 0.00)
 );
 
@@ -227,28 +231,28 @@ CREATE TABLE Pago (
 -- BLOQUE 5: PROCESO LOGÍSTICO (ÓRDENES DE COMPRA AL PROVEEDOR)
 -- ==========================================================
 
-CREATE TABLE Orden_compra (
-    Id_orden INT PRIMARY KEY,
-    Id_proveedor INT NOT NULL,
-    Fecha_emision DATE NOT NULL,
-    Fecha_entrega DATE,
+CREATE TABLE Orden_comp (
+    Id_orden INT AUTO_INCREMENT PRIMARY KEY,
+    Id_prov INT NOT NULL,
+    Fecha_emi DATE NOT NULL,
+    Fecha_ent DATE,
     Total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     Estado_orden VARCHAR(30) NOT NULL DEFAULT 'SOLICITADO',
-    FOREIGN KEY (Id_proveedor) REFERENCES Proveedor(Id_proveedor),
+    FOREIGN KEY (Id_prov) REFERENCES Proveedor(Id_prov),
     CONSTRAINT chk_total_orden CHECK (Total >= 0.00),
     CONSTRAINT chk_estado_orden CHECK (Estado_orden IN ('SOLICITADO', 'APROBADO', 'RECIBIDO', 'CANCELADO'))
 );
 
-CREATE TABLE Detalle_orden_compra (
-    Id_detalle_oc INT PRIMARY KEY,
+CREATE TABLE Det_orden_comp (
+    Id_det_oc INT AUTO_INCREMENT PRIMARY KEY,
     Id_orden INT NOT NULL,
-    Id_producto INT NOT NULL,
-    Id_estado_oc INT NOT NULL,
+    Id_prod INT NOT NULL,
+    Id_est_oc INT NOT NULL,
     Cantidad INT NOT NULL,
     Subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    FOREIGN KEY (Id_orden) REFERENCES Orden_compra(Id_orden),
-    FOREIGN KEY (Id_producto) REFERENCES Producto(Id_producto),
-    FOREIGN KEY (Id_estado_oc) REFERENCES Estado_orden_compra(Id_estado_oc),
+    FOREIGN KEY (Id_orden) REFERENCES Orden_comp(Id_orden),
+    FOREIGN KEY (Id_prod) REFERENCES Producto(Id_prod),
+    FOREIGN KEY (Id_est_oc) REFERENCES Est_ord_comp(Id_est_oc),
     CONSTRAINT chk_cantidad_oc CHECK (Cantidad > 0),
     CONSTRAINT chk_subtotal_oc CHECK (Subtotal >= 0.00)
 );
@@ -318,7 +322,7 @@ INSERT INTO Tipo_pago VALUES
 (5,'Tarjeta');
 
 
-INSERT INTO Estado_pedido VALUES
+INSERT INTO Estado_ped VALUES
 (1,'Pendiente','Pedido registrado'),
 (2,'Admitido','Pedido aceptado'),
 (3,'Procesado','En producción'),
@@ -326,7 +330,7 @@ INSERT INTO Estado_pedido VALUES
 (5,'Cancelado','Pedido anulado');
 
 
-INSERT INTO Estado_despacho VALUES
+INSERT INTO Estado_dep VALUES
 (1,'En Almacen','Preparando salida'),
 (2,'En Ruta','Despachado'),
 (3,'Entregado','Cliente recibió'),
@@ -334,7 +338,7 @@ INSERT INTO Estado_despacho VALUES
 (5,'Reprogramado','Nueva fecha');
 
 
-INSERT INTO Estado_comprobante VALUES
+INSERT INTO Estado_comprob VALUES
 (1,'Emitido','Comprobante generado'),
 (2,'Pagado','Pago completo'),
 (3,'Pendiente','Pago pendiente'),
@@ -342,7 +346,7 @@ INSERT INTO Estado_comprobante VALUES
 (5,'Observado','Requiere revisión');
 
 
-INSERT INTO Estado_orden_compra VALUES
+INSERT INTO Est_ord_comp VALUES
 (1,'Solicitado','Orden generada'),
 (2,'Aprobado','Orden aprobada'),
 (3,'Recibido','Mercadería recibida'),
@@ -371,7 +375,7 @@ INSERT INTO Categoria VALUES
 (10,'Bolsas Ecologicas','Bolsas reutilizables');
 
 
-INSERT INTO Tecnica_perzonalizacion VALUES
+INSERT INTO Tecnica_perz VALUES
 (1,'Sublimacion',5.00,'Impresion por calor'),
 (2,'Serigrafia',4.50,'Impresion en tinta'),
 (3,'Bordado',8.00,'Bordado computarizado'),
@@ -467,7 +471,7 @@ INSERT INTO CLIENTE VALUES
 (80,'Centro Empresarial Pachacutec','2026-05-15','VES');
 
 
-INSERT INTO contacto_cliente VALUES
+INSERT INTO contacto_cli VALUES
 (1,1,'Carlos','Ramos','987654321','cramos1@gmail.com'),
 (2,2,'Luis','Quispe','987654322','lquispe2@gmail.com'),
 (3,3,'María','Torres','987654323','mtorres3@gmail.com'),
@@ -508,7 +512,7 @@ INSERT INTO contacto_cliente VALUES
 (38,38,'Renzo','Fuentes','987654358','rfuentes38@gmail.com'),
 (39,39,'Andrea','Cerna','987654359','acerna39@gmail.com'),
 (40,40,'Oscar','Villacorta','987654360','ovillacorta40@gmail.com');
-INSERT INTO contacto_cliente VALUES
+INSERT INTO contacto_cli VALUES
 (41,41,'Luis','Gonzales','987654361','lgonzales41@gmail.com'),
 (42,42,'Mariela','Castillo','987654362','mcastillo42@gmail.com'),
 (43,43,'Javier','Ramirez','987654363','jramirez43@gmail.com'),
@@ -551,7 +555,7 @@ INSERT INTO contacto_cliente VALUES
 (80,80,'Fiorella','Acosta','987654400','facosta80@gmail.com');
 
 
-INSERT INTO Proveedor VALUES
+INSERT INTO Proveedor (Id_prov, Razon, Ruc, Direccion, Telefono, Correo) VALUES
 (1,'Textiles Andinos SAC','20100000001','La Victoria, Lima','987700001','ventas@textilesandinos.pe'),
 (2,'Peru Cotton Group SAC','20100000002','La Victoria, Lima','987700002','contacto@perucotton.pe'),
 (3,'Importadora Textil Sur SAC','20100000003','Ate, Lima','987700003','ventas@textilsur.pe'),
@@ -592,7 +596,7 @@ INSERT INTO Proveedor VALUES
 (38,'Tazas Premium SAC','20100000038','Breña, Lima','987700038','ventas@tazaspremium.pe'),
 (39,'Llaveros Creativos SAC','20100000039','Lima','987700039','ventas@llaveroscreativos.pe'),
 (40,'Mochilas Corporativas SAC','20100000040','Ate, Lima','987700040','ventas@mochilascorp.pe');
-INSERT INTO Proveedor VALUES
+INSERT INTO Proveedor (Id_prov, Razon, Ruc, Direccion, Telefono, Correo) VALUES
 (41,'Gorras del Perú SAC','20100000041','La Victoria, Lima','987700041','ventas@gorrasperu.pe'),
 (42,'Polos Corporativos SAC','20100000042','Ate, Lima','987700042','ventas@poloscorporativos.pe'),
 (43,'Uniformes Empresariales SAC','20100000043','San Juan de Lurigancho, Lima','987700043','ventas@uniformesemp.pe'),
@@ -634,7 +638,7 @@ INSERT INTO Proveedor VALUES
 (79,'Suministros Empresariales SAC','20100000079','San Juan de Miraflores','987700079','ventas@suministrosemp.pe'),
 (80,'Corporación Villa Sur SAC','20100000080','Villa El Salvador','987700080','ventas@villasur.pe');
 
-INSERT INTO Contacto_proveedor VALUES
+INSERT INTO Contacto_prov VALUES
 (1,1,'Carlos','Ramos','986500001','cramos.prov1@gmail.com'),
 (2,2,'Luis','Quispe','986500002','lquispe.prov2@gmail.com'),
 (3,3,'María','Torres','986500003','mtorres.prov3@gmail.com'),
@@ -922,7 +926,7 @@ INSERT INTO Inventario VALUES
 (90,90,280,50,'I5');
 
 
-INSERT INTO Stock_almacen VALUES
+INSERT INTO Stock_alm VALUES
 (1,1,1,120),
 (2,2,2,95),
 (3,3,3,80),
@@ -1022,102 +1026,102 @@ INSERT INTO Stock_almacen VALUES
 (90,5,90,280);
 
 
-INSERT INTO Movimiento_inventario VALUES
-(1,1,1,'INGRESO',200,'2024-01-10','Compra inicial de polos'),
-(2,2,2,'INGRESO',150,'2024-01-15','Reposición de stock'),
-(3,3,3,'SALIDA',20,'2024-02-01','Pedido cliente'),
-(4,4,4,'INGRESO',180,'2024-02-05','Compra proveedor'),
-(5,5,5,'SALIDA',15,'2024-02-10','Venta corporativa'),
+INSERT INTO Mov_invent (Id_mov, Id_prod, Tipo_mov, Cantidad, Fecha, Observacion) VALUES
+(1,1,'INGRESO',200,'2024-01-10','Compra inicial de polos'),
+(2,2,'INGRESO',150,'2024-01-15','Reposición de stock'),
+(3,3,'SALIDA',20,'2024-02-01','Pedido cliente'),
+(4,4,'INGRESO',180,'2024-02-05','Compra proveedor'),
+(5,5,'SALIDA',15,'2024-02-10','Venta corporativa'),
 
-(6,6,1,'INGRESO',220,'2024-03-01','Ingreso almacén'),
-(7,7,2,'SALIDA',25,'2024-03-08','Pedido empresa'),
-(8,8,3,'AJUSTE',5,'2024-03-12','Regularización inventario'),
-(9,9,4,'INGRESO',250,'2024-03-20','Compra proveedor'),
-(10,10,5,'SALIDA',30,'2024-03-25','Venta institucional'),
+(6,6,'INGRESO',220,'2024-03-01','Ingreso almacén'),
+(7,7,'SALIDA',25,'2024-03-08','Pedido empresa'),
+(8,8,'AJUSTE',5,'2024-03-12','Regularización inventario'),
+(9,9,'INGRESO',250,'2024-03-20','Compra proveedor'),
+(10,10,'SALIDA',30,'2024-03-25','Venta institucional'),
 
-(11,11,1,'INGRESO',180,'2024-04-05','Reposición'),
-(12,12,2,'SALIDA',18,'2024-04-12','Pedido cliente'),
-(13,13,3,'INGRESO',120,'2024-04-18','Compra proveedor'),
-(14,14,4,'SALIDA',12,'2024-04-22','Venta'),
-(15,15,5,'AJUSTE',8,'2024-04-30','Conteo físico'),
+(11,11,'INGRESO',180,'2024-04-05','Reposición'),
+(12,12,'SALIDA',18,'2024-04-12','Pedido cliente'),
+(13,13,'INGRESO',120,'2024-04-18','Compra proveedor'),
+(14,14,'SALIDA',12,'2024-04-22','Venta'),
+(15,15,'AJUSTE',8,'2024-04-30','Conteo físico'),
 
-(16,16,1,'INGRESO',170,'2024-05-03','Compra'),
-(17,17,2,'SALIDA',35,'2024-05-10','Pedido universidad'),
-(18,18,3,'INGRESO',200,'2024-05-15','Ingreso stock'),
-(19,19,4,'SALIDA',22,'2024-05-20','Venta corporativa'),
-(20,20,5,'INGRESO',190,'2024-05-25','Reposición'),
+(16,16,'INGRESO',170,'2024-05-03','Compra'),
+(17,17,'SALIDA',35,'2024-05-10','Pedido universidad'),
+(18,18,'INGRESO',200,'2024-05-15','Ingreso stock'),
+(19,19,'SALIDA',22,'2024-05-20','Venta corporativa'),
+(20,20,'INGRESO',190,'2024-05-25','Reposición'),
 
-(21,21,1,'SALIDA',15,'2024-06-05','Pedido cliente'),
-(22,22,2,'INGRESO',140,'2024-06-10','Compra proveedor'),
-(23,23,3,'SALIDA',18,'2024-06-15','Venta'),
-(24,24,4,'INGRESO',160,'2024-06-20','Ingreso almacén'),
-(25,25,5,'AJUSTE',10,'2024-06-25','Regularización'),
+(21,21,'SALIDA',15,'2024-06-05','Pedido cliente'),
+(22,22,'INGRESO',140,'2024-06-10','Compra proveedor'),
+(23,23,'SALIDA',18,'2024-06-15','Venta'),
+(24,24,'INGRESO',160,'2024-06-20','Ingreso almacén'),
+(25,25,'AJUSTE',10,'2024-06-25','Regularización'),
 
-(26,26,1,'INGRESO',130,'2024-07-01','Compra'),
-(27,27,2,'SALIDA',20,'2024-07-08','Pedido'),
-(28,28,3,'INGRESO',140,'2024-07-15','Reposición'),
-(29,29,4,'SALIDA',12,'2024-07-20','Venta'),
-(30,30,5,'INGRESO',180,'2024-07-28','Compra'),
+(26,26,'INGRESO',130,'2024-07-01','Compra'),
+(27,27,'SALIDA',20,'2024-07-08','Pedido'),
+(28,28,'INGRESO',140,'2024-07-15','Reposición'),
+(29,29,'SALIDA',12,'2024-07-20','Venta'),
+(30,30,'INGRESO',180,'2024-07-28','Compra'),
 
-(31,31,1,'INGRESO',500,'2024-08-02','Compra masiva'),
-(32,32,2,'SALIDA',50,'2024-08-08','Campaña promocional'),
-(33,33,3,'INGRESO',250,'2024-08-15','Ingreso almacén'),
-(34,34,4,'SALIDA',35,'2024-08-20','Pedido cliente'),
-(35,35,5,'AJUSTE',5,'2024-08-28','Conteo físico'),
+(31,31,'INGRESO',500,'2024-08-02','Compra masiva'),
+(32,32,'SALIDA',50,'2024-08-08','Campaña promocional'),
+(33,33,'INGRESO',250,'2024-08-15','Ingreso almacén'),
+(34,34,'SALIDA',35,'2024-08-20','Pedido cliente'),
+(35,35,'AJUSTE',5,'2024-08-28','Conteo físico'),
 
-(36,36,1,'INGRESO',300,'2024-09-05','Compra'),
-(37,37,2,'SALIDA',10,'2024-09-10','Venta'),
-(38,38,3,'INGRESO',100,'2024-09-15','Reposición'),
-(39,39,4,'SALIDA',15,'2024-09-20','Pedido'),
-(40,40,5,'INGRESO',120,'2024-09-25','Compra proveedor'),
+(36,36,'INGRESO',300,'2024-09-05','Compra'),
+(37,37,'SALIDA',10,'2024-09-10','Venta'),
+(38,38,'INGRESO',100,'2024-09-15','Reposición'),
+(39,39,'SALIDA',15,'2024-09-20','Pedido'),
+(40,40,'INGRESO',120,'2024-09-25','Compra proveedor'),
 
-(41,41,1,'INGRESO',700,'2025-01-05','Ingreso anual'),
-(42,42,2,'SALIDA',80,'2025-01-10','Pedido institucional'),
-(43,43,3,'INGRESO',800,'2025-01-15','Compra proveedor'),
-(44,44,4,'SALIDA',50,'2025-01-20','Venta'),
-(45,45,5,'AJUSTE',12,'2025-01-25','Regularización'),
+(41,41,'INGRESO',700,'2025-01-05','Ingreso anual'),
+(42,42,'SALIDA',80,'2025-01-10','Pedido institucional'),
+(43,43,'INGRESO',800,'2025-01-15','Compra proveedor'),
+(44,44,'SALIDA',50,'2025-01-20','Venta'),
+(45,45,'AJUSTE',12,'2025-01-25','Regularización'),
 
-(46,46,1,'INGRESO',650,'2025-02-01','Reposición'),
-(47,47,2,'SALIDA',75,'2025-02-08','Pedido empresa'),
-(48,48,3,'INGRESO',220,'2025-02-15','Compra'),
-(49,49,4,'SALIDA',20,'2025-02-22','Venta'),
-(50,50,5,'INGRESO',180,'2025-02-28','Ingreso almacén'),
+(46,46,'INGRESO',650,'2025-02-01','Reposición'),
+(47,47,'SALIDA',75,'2025-02-08','Pedido empresa'),
+(48,48,'INGRESO',220,'2025-02-15','Compra'),
+(49,49,'SALIDA',20,'2025-02-22','Venta'),
+(50,50,'INGRESO',180,'2025-02-28','Ingreso almacén'),
 
-(51,51,1,'INGRESO',150,'2025-03-05','Compra'),
-(52,52,2,'SALIDA',25,'2025-03-12','Pedido'),
-(53,53,3,'INGRESO',110,'2025-03-18','Reposición'),
-(54,54,4,'SALIDA',18,'2025-03-22','Venta'),
-(55,55,5,'AJUSTE',4,'2025-03-29','Conteo físico'),
+(51,51,'INGRESO',150,'2025-03-05','Compra'),
+(52,52,'SALIDA',25,'2025-03-12','Pedido'),
+(53,53,'INGRESO',110,'2025-03-18','Reposición'),
+(54,54,'SALIDA',18,'2025-03-22','Venta'),
+(55,55,'AJUSTE',4,'2025-03-29','Conteo físico'),
 
-(56,56,1,'INGRESO',200,'2025-04-03','Compra'),
-(57,57,2,'SALIDA',15,'2025-04-08','Pedido'),
-(58,58,3,'INGRESO',120,'2025-04-15','Ingreso stock'),
-(59,59,4,'SALIDA',8,'2025-04-20','Venta'),
-(60,60,5,'INGRESO',140,'2025-04-28','Compra'),
+(56,56,'INGRESO',200,'2025-04-03','Compra'),
+(57,57,'SALIDA',15,'2025-04-08','Pedido'),
+(58,58,'INGRESO',120,'2025-04-15','Ingreso stock'),
+(59,59,'SALIDA',8,'2025-04-20','Venta'),
+(60,60,'INGRESO',140,'2025-04-28','Compra'),
 
-(61,61,1,'INGRESO',180,'2026-01-05','Compra anual'),
-(62,62,2,'SALIDA',12,'2026-01-10','Pedido cliente'),
-(63,63,3,'INGRESO',220,'2026-01-15','Reposición'),
-(64,64,4,'SALIDA',10,'2026-01-20','Venta'),
-(65,65,5,'INGRESO',500,'2026-02-01','Ingreso almacén'),
+(61,61,'INGRESO',180,'2026-01-05','Compra anual'),
+(62,62,'SALIDA',12,'2026-01-10','Pedido cliente'),
+(63,63,'INGRESO',220,'2026-01-15','Reposición'),
+(64,64,'SALIDA',10,'2026-01-20','Venta'),
+(65,65,'INGRESO',500,'2026-02-01','Ingreso almacén'),
 
-(66,66,1,'SALIDA',40,'2026-02-08','Pedido corporativo'),
-(67,67,2,'INGRESO',350,'2026-02-15','Compra proveedor'),
-(68,68,3,'SALIDA',25,'2026-02-20','Venta'),
-(69,69,4,'INGRESO',300,'2026-03-01','Reposición'),
-(70,70,5,'SALIDA',30,'2026-03-05','Pedido'),
+(66,66,'SALIDA',40,'2026-02-08','Pedido corporativo'),
+(67,67,'INGRESO',350,'2026-02-15','Compra proveedor'),
+(68,68,'SALIDA',25,'2026-02-20','Venta'),
+(69,69,'INGRESO',300,'2026-03-01','Reposición'),
+(70,70,'SALIDA',30,'2026-03-05','Pedido'),
 
-(71,71,1,'INGRESO',250,'2026-03-10','Compra'),
-(72,72,2,'SALIDA',45,'2026-03-15','Venta institucional'),
-(73,73,3,'INGRESO',100,'2026-04-01','Ingreso stock'),
-(74,74,4,'SALIDA',15,'2026-04-05','Pedido'),
-(75,75,5,'AJUSTE',6,'2026-04-10','Regularización'),
+(71,71,'INGRESO',250,'2026-03-10','Compra'),
+(72,72,'SALIDA',45,'2026-03-15','Venta institucional'),
+(73,73,'INGRESO',100,'2026-04-01','Ingreso stock'),
+(74,74,'SALIDA',15,'2026-04-05','Pedido'),
+(75,75,'AJUSTE',6,'2026-04-10','Regularización'),
 
-(76,76,1,'INGRESO',80,'2026-04-15','Compra'),
-(77,77,2,'SALIDA',20,'2026-05-01','Venta'),
-(78,78,3,'INGRESO',70,'2026-05-05','Reposición'),
-(79,79,4,'SALIDA',10,'2026-05-10','Pedido cliente'),
-(80,80,5,'INGRESO',50,'2026-05-15','Ingreso almacén');
+(76,76,'INGRESO',80,'2026-04-15','Compra'),
+(77,77,'SALIDA',20,'2026-05-01','Venta'),
+(78,78,'INGRESO',70,'2026-05-05','Reposición'),
+(79,79,'SALIDA',10,'2026-05-10','Pedido cliente'),
+(80,80,'INGRESO',50,'2026-05-15','Ingreso almacén');
 
 
 INSERT INTO Pedido VALUES
@@ -1225,7 +1229,7 @@ INSERT INTO Pedido VALUES
 (80,28,1,'2026-03-25','2026-04-05','PENDIENTE','Pedido empresarial');
 
 
-INSERT INTO Detalle_pedido VALUES
+INSERT INTO Det_pedido VALUES
 (1,1,1,20,518.00),
 (2,2,2,15,337.50),
 (3,3,3,10,399.00),
@@ -1622,7 +1626,7 @@ INSERT INTO Pago VALUES
 (80,80,4,'2026-03-26',164.96);
 
 
-INSERT INTO Orden_compra VALUES
+INSERT INTO Orden_comp VALUES
 (1,1,'2024-01-08','2024-01-15',3740.00,'RECIBIDO'),
 (2,2,'2024-01-15','2024-01-22',4083.50,'RECIBIDO'),
 (3,3,'2024-01-22','2024-01-30',3210.20,'RECIBIDO'),
@@ -1720,7 +1724,7 @@ INSERT INTO Orden_compra VALUES
 (80,80,'2026-05-05','2026-05-12',1500.00,'CANCELADO');
 
 
-INSERT INTO Detalle_orden_compra VALUES
+INSERT INTO Det_orden_comp VALUES
 (1,1,1,3,50,1250.00),
 (2,2,2,3,75,1850.00),
 (3,3,3,3,40,980.00),
@@ -1847,193 +1851,165 @@ INSERT INTO Detalle_orden_compra VALUES
 (79,79,79,4,35,980.00),
 (80,80,80,4,55,1500.00);
 
--- ============================================================================
--- CONSULTAS CON INNER JOIN
--- ============================================================================
 
--- 1. Pedidos con razon social del cliente y estado del pedido
-SELECT 
-    p.Id_pedido,
-    c.razon_cliente,
-    p.Fecha_pedido,
-    p.Estado
-FROM Pedido p
-INNER JOIN CLIENTE c ON p.id_cliente = c.id_cliente;
-
--- 2. Productos con su categoria y tecnica de personalizacion
-SELECT 
-    pr.Id_producto,
-    pr.Nombre AS Producto,
-    cat.Nombre AS Categoria,
-    tp.Nombre AS Tecnica,
-    pr.Precio_unitario
-FROM Producto pr
-INNER JOIN Categoria cat ON pr.Id_categoria = cat.Id_categoria
-INNER JOIN Tecnica_perzonalizacion tp ON pr.Id_tecnica = tp.Id_tecnica;
-
--- 3. Despachos con razon social del cliente y distrito
-SELECT 
-    d.Id_despacho,
-    p.Id_pedido,
-    c.razon_cliente,
-    dist.Nombre AS Distrito,
-    d.Estado_despacho
-FROM Despacho d
-INNER JOIN Pedido p ON d.Id_pedido = p.Id_pedido
-INNER JOIN CLIENTE c ON p.id_cliente = c.id_cliente
-INNER JOIN Distrito dist ON d.Id_distrito = dist.Id_distrito;
-
--- 4. Comprobantes con su pago y tipo de pago
-SELECT 
-    comp.Id_comprobante,
-    comp.Tipo_comprobante,
-    comp.Monto_total,
-    tp.Nombre AS Tipo_Pago,
-    pg.Fecha_pago
-FROM Comprobante comp
-INNER JOIN Pago pg ON comp.Id_comprobante = pg.Id_comprobante
-INNER JOIN Tipo_pago tp ON pg.Id_tipo_pago = tp.Id_tipo_pago;
-
--- 5. Ordenes de compra con proveedor y detalle de productos
-SELECT 
-    oc.Id_orden,
-    prov.Razon AS Proveedor,
-    pr.Nombre AS Producto,
-    doc.Cantidad,
-    doc.Subtotal
-FROM Orden_compra oc
-INNER JOIN Proveedor prov ON oc.Id_proveedor = prov.Id_proveedor
-INNER JOIN Detalle_orden_compra doc ON oc.Id_orden = doc.Id_orden
-INNER JOIN Producto pr ON doc.Id_producto = pr.Id_producto;
-
-
-USE SumakVillaDB;
 
 -- ============================================================================
--- 1. CONSULTAS QUE GENERAN LAS TABLAS DE RESUMEN DEL DOCUMENTO (ANEXOS)
+-- ANEXO 1: CONSULTAS SQL (ALINEADAS AL INFORME WORD)
 -- ============================================================================
 
--- Tabla #1 y #15: Listado general de productos y estado
-SELECT Nombre, Precio_unitario, Estado
+-- ----------------------------------------------------------------------------
+-- 1. CATÁLOGOS Y PRODUCTOS
+-- ----------------------------------------------------------------------------
+
+-- Consulta 1. Listado general de productos con precio unitario y estado
+SELECT Nombre, Precio_uni, Estado
 FROM Producto;
 
--- Tabla #2: Listado filtrado de productos USB
-SELECT Nombre, Precio_unitario, Estado
-FROM Producto
-WHERE Nombre LIKE '%USB%';
+-- Consulta 2. Órdenes de compra registradas
+SELECT Id_orden, Fecha_emi, Fecha_ent, Total, Estado_orden
+FROM Orden_comp;
 
--- Tabla #5: Órdenes de compra emitidas entre 2025 y 2026
-SELECT Fecha_emision, Fecha_entrega, Total, Estado_orden
-FROM Orden_compra
-WHERE Fecha_emision >= '2025-01-01';
+-- ----------------------------------------------------------------------------
+-- 2. CONSULTAS CON INNER JOIN
+-- ----------------------------------------------------------------------------
 
--- Tabla #9: Directorio de contactos de clientes
-SELECT Nombre, Apellido, Correo
-FROM contacto_cliente;
-
-
--- ============================================================================
--- 2. CONSULTAS CON INNER JOIN (MYSQL WORKBENCH)
--- ============================================================================
-
--- 1. Pedidos con razón social del cliente y estado actual
-SELECT 
-    p.Id_pedido,
-    c.razon_cliente,
-    p.Fecha_pedido,
+-- Consulta 3. Pedidos con razón social del cliente y fecha
+SELECT
+    p.Id_ped,
+    c.razon_cli,
+    p.Fecha_ped,
     p.Estado
 FROM Pedido p
 INNER JOIN CLIENTE c ON p.id_cliente = c.id_cliente;
 
--- 2. Productos con su categoría y técnica de personalización
-SELECT 
-    pr.Id_producto,
+-- Consulta 4. Productos con categoría y técnica de personalización
+SELECT
+    pr.Id_prod,
     pr.Nombre AS Producto,
     cat.Nombre AS Categoria,
     tp.Nombre AS Tecnica,
-    pr.Precio_unitario
+    pr.Precio_uni
 FROM Producto pr
-INNER JOIN Categoria cat ON pr.Id_categoria = cat.Id_categoria
-INNER JOIN Tecnica_perzonalizacion tp ON pr.Id_tecnica = tp.Id_tecnica;
+INNER JOIN Categoria cat ON pr.Id_cat = cat.Id_cat
+INNER JOIN Tecnica_perz tp ON pr.Id_tecnica = tp.Id_tecnica;
 
--- 3. Despachos con cliente y distrito de entrega
-SELECT 
-    d.Id_despacho,
-    p.Id_pedido,
-    c.razon_cliente,
+-- Consulta adicional INNER JOIN: Despachos con cliente y distrito de entrega
+SELECT
+    d.Id_desp,
+    p.Id_ped,
+    c.razon_cli,
     dist.Nombre AS Distrito,
     d.Estado_despacho
 FROM Despacho d
-INNER JOIN Pedido p ON d.Id_pedido = p.Id_pedido
+INNER JOIN Pedido p ON d.Id_ped = p.Id_ped
 INNER JOIN CLIENTE c ON p.id_cliente = c.id_cliente
-INNER JOIN Distrito dist ON d.Id_distrito = dist.Id_distrito;
+INNER JOIN Distrito dist ON d.Id_dist = dist.Id_dist;
 
--- 4. Comprobantes con pago y método de pago utilizado
-SELECT 
-    comp.Id_comprobante,
-    comp.Tipo_comprobante,
+-- Consulta adicional INNER JOIN: Comprobantes con pago y método de pago
+SELECT
+    comp.Id_comprob,
+    comp.Tipo_comprob,
     comp.Monto_total,
     tp.Nombre AS Tipo_Pago,
     pg.Fecha_pago
 FROM Comprobante comp
-INNER JOIN Pago pg ON comp.Id_comprobante = pg.Id_comprobante
-INNER JOIN Tipo_pago tp ON pg.Id_tipo_pago = tp.Id_tipo_pago;
+INNER JOIN Pago pg ON comp.Id_comprob = pg.Id_comprob
+INNER JOIN Tipo_pago tp ON pg.Id_tipo_pag = tp.Id_tipo_pag;
 
--- 5. Órdenes de compra con proveedor y productos solicitados
-SELECT 
+-- Consulta adicional INNER JOIN: Órdenes de compra con proveedor y productos
+SELECT
     oc.Id_orden,
     prov.Razon AS Proveedor,
     pr.Nombre AS Producto,
     doc.Cantidad,
     doc.Subtotal
-FROM Orden_compra oc
-INNER JOIN Proveedor prov ON oc.Id_proveedor = prov.Id_proveedor
-INNER JOIN Detalle_orden_compra doc ON oc.Id_orden = doc.Id_orden
-INNER JOIN Producto pr ON doc.Id_producto = pr.Id_producto;
+FROM Orden_comp oc
+INNER JOIN Proveedor prov ON oc.Id_prov = prov.Id_prov
+INNER JOIN Det_orden_comp doc ON oc.Id_orden = doc.Id_orden
+INNER JOIN Producto pr ON doc.Id_prod = pr.Id_prod;
 
+-- ----------------------------------------------------------------------------
+-- 3. CONSULTAS CON GROUP BY
+-- ----------------------------------------------------------------------------
 
--- ============================================================================
--- 3. PARTICIONAMIENTO EN MYSQL WORKBENCH (RANGE BY YEAR)
--- ============================================================================
+-- Consulta 5. Total de pedidos por cliente
+SELECT
+    c.razon_cli,
+    COUNT(p.Id_ped) AS Total_Pedidos
+FROM CLIENTE c
+INNER JOIN Pedido p ON c.id_cliente = p.id_cliente
+GROUP BY c.razon_cli;
+
+-- Consulta 6. Cantidad de órdenes de compra por estado
+SELECT
+    Estado_orden,
+    COUNT(*) AS Cantidad
+FROM Orden_comp
+GROUP BY Estado_orden;
+
+-- ----------------------------------------------------------------------------
+-- 4. CONSULTAS CON HAVING
+-- ----------------------------------------------------------------------------
+
+-- Consulta 7. Productos con más de 10 unidades vendidas
+SELECT
+    pr.Nombre,
+    SUM(dp.Cantidad) AS Total_Vendido
+FROM Producto pr
+INNER JOIN Det_pedido dp ON pr.Id_prod = dp.Id_prod
+GROUP BY pr.Nombre
+HAVING SUM(dp.Cantidad) > 10;
+
+-- Consulta adicional HAVING: Clientes con más de 3 pedidos registrados
+SELECT
+    c.razon_cli,
+    COUNT(p.Id_ped) AS Total_Pedidos
+FROM CLIENTE c
+INNER JOIN Pedido p ON c.id_cliente = p.id_cliente
+GROUP BY c.razon_cli
+HAVING COUNT(p.Id_ped) > 3;
+
+-- ----------------------------------------------------------------------------
+-- 5. PARTICIONAMIENTO EN MYSQL WORKBENCH (RANGE BY YEAR)
+-- ----------------------------------------------------------------------------
 -- Nota: En MySQL, la columna de partición debe formar parte de la PRIMARY KEY.
 
+-- Consulta 8. Creación, carga de datos y consulta de una partición específica
 CREATE TABLE Pedido_Particionado (
-    Id_pedido INT NOT NULL,
+    Id_ped INT NOT NULL,
     id_cliente INT NOT NULL,
-    Fecha_pedido DATE NOT NULL,
+    Fecha_ped DATE NOT NULL,
     Estado VARCHAR(30) NOT NULL,
-    PRIMARY KEY (Id_pedido, Fecha_pedido)
+    PRIMARY KEY (Id_ped, Fecha_ped)
 )
-PARTITION BY RANGE (YEAR(Fecha_pedido)) (
+PARTITION BY RANGE (YEAR(Fecha_ped)) (
     PARTITION p_2024 VALUES LESS THAN (2025),
     PARTITION p_2025 VALUES LESS THAN (2026),
     PARTITION p_2026 VALUES LESS THAN (2027),
     PARTITION p_futuro VALUES LESS THAN MAXVALUE
 );
 
--- Cargar datos desde Pedido hacia la tabla particionada para pruebas
-INSERT INTO Pedido_Particionado (Id_pedido, id_cliente, Fecha_pedido, Estado)
-SELECT Id_pedido, id_cliente, Fecha_pedido, Estado
+INSERT INTO Pedido_Particionado (Id_ped, id_cliente, Fecha_ped, Estado)
+SELECT Id_ped, id_cliente, Fecha_ped, Estado
 FROM Pedido;
 
--- Consultar una partición específica en MySQL
-SELECT * FROM Pedido_Particionado PARTITION (p_2025);
+SELECT *
+FROM Pedido_Particionado PARTITION (p_2025);
 
--- Verificar la distribución de filas por partición en MySQL
+-- Verificación de distribución de filas por partición
 SELECT PARTITION_NAME, TABLE_ROWS
 FROM INFORMATION_SCHEMA.PARTITIONS
 WHERE TABLE_SCHEMA = 'SumakVillaDB'
   AND TABLE_NAME = 'Pedido_Particionado';
 
+-- ----------------------------------------------------------------------------
+-- 6. TRIGGER EN MYSQL WORKBENCH (AUDITORÍA DE NUEVOS PEDIDOS)
+-- ----------------------------------------------------------------------------
 
--- ============================================================================
--- 4. TRIGGER EN MYSQL WORKBENCH
--- ============================================================================
-
--- Tabla de auditoría/registro para evidenciar el disparo del trigger
+-- Consulta 9. Tabla de registro, creación del trigger, carga de prueba y consulta
 CREATE TABLE Log_Pedido (
     Id_log INT AUTO_INCREMENT PRIMARY KEY,
-    Id_pedido INT NOT NULL,
+    Id_ped INT NOT NULL,
     Estado_nuevo VARCHAR(30) NOT NULL,
     Fecha_registro DATETIME NOT NULL
 );
@@ -2044,21 +2020,35 @@ CREATE TRIGGER trg_log_nuevo_pedido
 AFTER INSERT ON Pedido
 FOR EACH ROW
 BEGIN
-    INSERT INTO Log_Pedido (Id_pedido, Estado_nuevo, Fecha_registro)
-    VALUES (NEW.Id_pedido, NEW.Estado, NOW());
+    INSERT INTO Log_Pedido (Id_ped, Estado_nuevo, Fecha_registro)
+    VALUES (NEW.Id_ped, NEW.Estado, NOW());
 END //
 
 DELIMITER ;
 
--- Consultar los registros creados automáticamente por el trigger
-SELECT * FROM Log_Pedido;
+-- 10 registros nuevos en Pedido para activar el trigger automáticamente
+INSERT INTO Pedido (Id_ped, id_cliente, Id_estado, Fecha_ped, Fecha_ent, Estado, Obs) VALUES
+(101, 1, 1, '2026-06-01', '2026-06-10', 'PENDIENTE', 'Pedido de polos corporativos personalizados'),
+(102, 2, 2, '2026-06-03', '2026-06-12', 'ADMITIDO', 'Pedido de gorras bordadas para campaña'),
+(103, 3, 3, '2026-06-05', '2026-06-15', 'PROCESADO', 'Pedido de tazas sublimadas institucionales'),
+(104, 4, 4, '2026-06-07', '2026-06-16', 'ENTREGADO', 'Pedido de tomatodos promocionales entregados'),
+(105, 5, 1, '2026-06-10', '2026-06-20', 'PENDIENTE', 'Pedido de agendas ejecutivas con logotipo'),
+(106, 6, 2, '2026-06-12', '2026-06-22', 'ADMITIDO', 'Pedido de memorias USB corporativas'),
+(107, 7, 3, '2026-06-15', '2026-06-25', 'PROCESADO', 'Pedido de mochilas publicitarias en producción'),
+(108, 8, 4, '2026-06-18', '2026-06-28', 'ENTREGADO', 'Pedido de bolsas ecológicas entregadas'),
+(109, 9, 1, '2026-06-20', '2026-06-30', 'PENDIENTE', 'Pedido de lapiceros personalizados para evento'),
+(110, 10, 2, '2026-06-22', '2026-07-02', 'ADMITIDO', 'Pedido de llaveros corporativos admitido');
 
--- Consultar los pedidos registrados en el log junto con el nombre del cliente
-SELECT 
-    lp.Id_pedido,
-    c.razon_cliente,
+-- Consultar los registros generados automáticamente por el trigger
+SELECT Id_log, Id_ped, Estado_nuevo, Fecha_registro
+FROM Log_Pedido;
+
+-- Consultar los pedidos del log junto con la razón social del cliente
+SELECT
+    lp.Id_ped,
+    c.razon_cli,
     lp.Estado_nuevo,
     lp.Fecha_registro
 FROM Log_Pedido lp
-INNER JOIN Pedido p ON lp.Id_pedido = p.Id_pedido
+INNER JOIN Pedido p ON lp.Id_ped = p.Id_ped
 INNER JOIN CLIENTE c ON p.id_cliente = c.id_cliente;
